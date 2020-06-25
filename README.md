@@ -1,5 +1,12 @@
 # mutt-wizard
 
+## Changes made
+
+This is WnndGws' fork of mutt-wizard (forked on 2020-06-26)
+All changes are made to better suit my workflow
+
+## Mutt-wizard
+
 Get this great stuff without effort:
 
 - A full-featured and autoconfigured email client on the terminal with neomutt
