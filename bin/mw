@@ -1,9 +1,9 @@
 #!/bin/sh
 
 command -V gpg >/dev/null 2>&1 && GPG="gpg" || GPG="gpg2"
-[ -z ${PASSWORD_STORE_DIR+x} ] && PASSWORD_STORE_DIR="$HOME/.password-store"
-[ -r "$PASSWORD_STORE_DIR/.gpg-id" ] &&
-    "$GPG" --list-secret-keys $(cat "$PASSWORD_STORE_DIR/.gpg-id") >/dev/null 2>&1 || {
+[ -z ${PASSWORD_STORE_DIR+x} ] && PASSWORD_STORE_DIR="$XDG_CONFIG_HOME/password-store"
+[ -r "$PASSWORD_STORE_DIR/gpg-id" ] &&
+    "$GPG" --list-secret-keys $(cat "$PASSWORD_STORE_DIR/gpg-id") >/dev/null 2>&1 || {
         printf "\`pass\` must be installed and initialized to encrypt passwords.\\nBe sure it is installed and run \`pass init <yourgpgemail>\`.\\nIf you don't have a GPG public private key pair, run \`%s --full-gen-key\` first.\\n" "$GPG"
         exit
     }
@@ -16,7 +16,7 @@ maildir="$HOME/.local/share/mail"	# Location of mail storage
 namere="^[a-z_][a-z0-9_-]*$"		# Regex to ensure viable username
 emailre=".\+@.\+\\..\+" 		# Regex to confirm valid email address
 muttshare="$prefix/share/mutt-wizard"
-mbsyncrc="$HOME/.mbsyncrc"
+mbsyncrc="$HOME/mbsync/mbsyncrc"
 mwconfig="$muttshare/mutt-wizard.muttrc"
 cachedir="$HOME/.cache/mutt-wizard"
 muttrc="$muttdir/muttrc"

@@ -1,7 +1,7 @@
 #!/bin/sh
+# Tries to open all files with my rofi script
 
-# Helps open a file with xdg-open from mutt in a external program without weird side effects.
-[ "$(uname)" = "Darwin" ] && opener="open" || opener="setsid xdg-open"
+opener="$HOME/git/scripts/shell/rofi_openwith"
 mkdir -p "/tmp/$USER-mutt-tmp"
 file="/tmp/$USER-mutt-tmp/$(basename "$1")"
 rm -f "$file"

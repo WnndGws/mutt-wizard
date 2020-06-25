@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Sync mail and give notification if there is new mail.
 
 # Run only if user logged in (prevent cron errors)
@@ -18,19 +17,19 @@ export DISPLAY=:0.0
 # For individual configurations:
 [ -d "$HOME/.local/share/password-store" ] && export PASSWORD_STORE_DIR="$HOME/.local/share/password-store"
 
-# Settings are different for MacOS (Darwin) systems.
-if [ "$(uname)" = "Darwin" ]; then
-    notify() { osascript -e "display notification \"$2 in $1\" with title \"You've got Mail\" subtitle \"Account: $account\"" && sleep 2 ;}
-    messageinfo() { osascript -e "display notification with title \"📧 $from\" subtitle \"$subject\"" ;}
-else
-    notify() { notify-send --app-name="mutt-wizard" "mutt-wizard" "📬 $2 new mail(s) in \`$1\` account." ;}
-    messageinfo() { notify-send --app-name="mutt-wizard" "📧$from:" "$subject" ;}
-fi
+
+# Check account for new mail. Notify if there is new content.
+synconly() {
+    acc="$(echo "$account" | sed "s/.*\///")"
+    if [ -z "$opts" ]; then mbsync --config $XDG_CONFIG_HOME/mbsync/mbsyncrc "$acc"; else mbsync --config $XDG_CONFIG_HOME/mbsync/mbsyncrc "$opts" "$acc"; fi
+    new=$(find "$HOME/.local/share/mail/$acc/INBOX/new/" "$HOME/.local/share/mail/$acc/Inbox/new/" "$HOME/.local/share/mail/$acc/inbox/new/" -type f -newer "$HOME/.config/mutt/.mailsynclastrun" 2> /dev/null)
+    newcount=$(echo "$new" | sed '/^\s*$/d' | wc -l)
+}
 
 # Check account for new mail. Notify if there is new content.
 syncandnotify() {
     acc="$(echo "$account" | sed "s/.*\///")"
-    if [ -z "$opts" ]; then mbsync "$acc"; else mbsync "$opts" "$acc"; fi
+    if [ -z "$opts" ]; then mbsync --config $XDG_CONFIG_HOME/mbsync/mbsyncrc "$acc"; else mbsync --config $XDG_CONFIG_HOME/mbsync/mbsyncrc "$opts" "$acc"; fi
     new=$(find "$HOME/.local/share/mail/$acc/INBOX/new/" "$HOME/.local/share/mail/$acc/Inbox/new/" "$HOME/.local/share/mail/$acc/inbox/new/" -type f -newer "$HOME/.config/mutt/.mailsynclastrun" 2> /dev/null)
     newcount=$(echo "$new" | sed '/^\s*$/d' | wc -l)
     if [ "$newcount" -gt "0" ]; then
@@ -46,7 +45,7 @@ syncandnotify() {
 
 # Sync accounts passed as argument or all.
 if [ "$#" -eq "0" ]; then
-    accounts="$(awk '/^Channel/ {print $2}' "$HOME/.mbsyncrc")"
+    accounts="$(awk '/^Channel/ {print $2}' "$XDG_CONFIG_HOME/mbsync/mbsyncrc")"
 else
     for arg in "$@"; do
         [ "${arg%${arg#?}}" = '-' ] && opts="${opts:+${opts} }${arg}" && shift 1
@@ -54,18 +53,16 @@ else
     accounts=$*
 fi
 
-( kill -46 "$(pidof "${STATUSBAR:-dwmblocks}")" >/dev/null 2>&1 ) 2>/dev/null
-
 # Parallelize multiple accounts
 for account in $accounts
 do
-    syncandnotify &
+    synconly &
 done
 
 wait
-( kill -46 "$(pidof "${STATUSBAR:-dwmblocks}")" >/dev/null 2>&1 ) 2>/dev/null
 
 notmuch new 2>/dev/null
+#$XDG_CONFIG_HOME/notmuch/notmuch.hook
 
 #Create a touch file that indicates the time of the last run of mailsync
 touch "$HOME/.config/mutt/.mailsynclastrun"
